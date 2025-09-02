@@ -1,0 +1,289 @@
+  <!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Kalkulator dengan Konversi Romawi</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #a7168a 0%, #27d88b 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .calculator {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            width: 350px;
+            backdrop-filter: blur(10px);
+        }
+        .screen {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: right;
+            height: 120px;
+            overflow: hidden;
+        }
+        .display {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #212529;
+            margin-bottom: 5px;
+            min-height: 60px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .roman-display {
+            font-size: 1.2em;
+            color: #6c757d;
+            font-style: italic;
+            min-height: 30px;
+        }
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        button {
+            padding: 20px;
+            font-size: 1.5em;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .number {
+            background: #e9ecef;
+            color: #212529;
+        }
+        .number:hover {
+            background: #dee2e6;
+        }
+        .operator {
+            background: #007bff;
+            color: white;
+        }
+        .operator:hover {
+            background: #0056b3;
+        }
+        .function {
+            background: #28a745;
+            color: white;
+        }
+        .function:hover {
+            background: #1e7e34;
+        }
+        .special {
+            background: #ffc107;
+            color: #212529;
+        }
+        .special:hover {
+            background: #e0a800;
+        }
+        .clear {
+            background: #dc3545;
+            color: white;
+        }
+        .clear:hover {
+            background: #bd2130;
+        }
+    </style>
+</head>
+<body>
+    <div class="calculator">
+        <div class="screen">
+            <div class="display" id="display">0</div>
+            <div class="roman-display" id="romanDisplay">N / A</div>
+        </div>
+        <div class="buttons">
+            <button class="clear" onclick="clearDisplay()">C</button>
+            <button class="special" onclick="convertToRoman()">↺</button>
+            <button class="operator" onclick="appendOperator('/')">/</button>
+            <button class="operator" onclick="appendOperator('*')">×</button>
+
+            <button class="number" onclick="appendNumber(7)">7</button>
+            <button class="number" onclick="appendNumber(8)">8</button>
+            <button class="number" onclick="appendNumber(9)">9</button>
+            <button class="operator" onclick="appendOperator('-')">-</button>
+
+            <button class="number" onclick="appendNumber(4)">4</button>
+            <button class="number" onclick="appendNumber(5)">5</button>
+            <button class="number" onclick="appendNumber(6)">6</button>
+            <button class="operator" onclick="appendOperator('+')">+</button>
+
+            <button class="number" onclick="appendNumber(1)">1</button>
+            <button class="number" onclick="appendNumber(2)">2</button>
+            <button class="number" onclick="appendNumber(3)">3</button>
+            <button class="function" onclick="calculate()">=</button>
+
+            <button class="number" onclick="appendNumber(0)">0</button>
+            <button class="number" onclick="appendDecimal()">.</button>
+            <button class="special" onclick="deleteLast()">⌫</button>
+            <button class="function" onclick="calculate()">⏎</button>
+        </div>
+    </div>
+
+    <script>
+        let currentInput = '0';
+        let previousInput = '';
+        let operation = null;
+        let resetScreen = false;
+
+        const display = document.getElementById('display');
+        const romanDisplay = document.getElementById('romanDisplay');
+
+        function updateDisplay() {
+            display.textContent = currentInput;
+            const num = parseInt(currentInput);
+            if (isNaN(num) || currentInput === '' || currentInput === 'Infinity' || currentInput === '-Infinity') {
+                romanDisplay.textContent = 'N / A';
+            } else {
+                romanDisplay.textContent = convertNumberToRoman(num);
+            }
+        }
+
+        function appendNumber(number) {
+            if (currentInput === '0' || resetScreen) {
+                currentInput = number.toString();
+                resetScreen = false;
+            } else {
+                currentInput += number.toString();
+            }
+            updateDisplay();
+        }
+
+        function appendDecimal() {
+            if (resetScreen) {
+                currentInput = '0.';
+                resetScreen = false;
+            } else if (!currentInput.includes('.')) {
+                currentInput += '.';
+            }
+            updateDisplay();
+        }
+
+        function appendOperator(op) {
+            if (operation !== null) calculate();
+            previousInput = currentInput;
+            operation = op;
+            resetScreen = true;
+        }
+
+        function calculate() {
+            if (operation === null || resetScreen) return;
+
+            let result;
+            const prev = parseFloat(previousInput);
+            const current = parseFloat(currentInput);
+
+            switch (operation) {
+                case '+':
+                    result = prev + current;
+                    break;
+                case '-':
+                    result = prev - current;
+                    break;
+                case '*':
+                    result = prev * current;
+                    break;
+                case '/':
+                    if (current === 0) {
+                        result = 'Infinity';
+                    } else {
+                        result = prev / current;
+                    }
+                    break;
+                default:
+                    return;
+            }
+
+            currentInput = result.toString();
+            operation = null;
+            resetScreen = true;
+            updateDisplay();
+        }
+
+        function clearDisplay() {
+            currentInput = '0';
+            previousInput = '';
+            operation = null;
+            resetScreen = false;
+            updateDisplay();
+        }
+
+        function deleteLast() {
+            if (resetScreen) {
+                currentInput = '0';
+                resetScreen = false;
+            } else if (currentInput.length === 1) {
+                currentInput = '0';
+            } else {
+                currentInput = currentInput.slice(0, -1);
+            }
+            updateDisplay();
+        }
+
+        function convertToRoman() {
+            const num = parseInt(currentInput);
+            if (num === 0) {
+                romanDisplay.textContent = 'Infinity';
+            } else {
+                romanDisplay.textContent = convertNumberToRoman(num);
+            }
+        }
+
+        function convertNumberToRoman(num) {
+            if (num === 0) return 'Infinity';
+            if (num < 0) return 'Tidak ada';
+            if (num > 3999) return 'Terlalu besar';
+
+            const romanNumerals = [
+                { value: 1000, symbol: 'M' },
+                { value: 900, symbol: 'CM' },
+                { value: 500, symbol: 'D' },
+                { value: 400, symbol: 'CD' },
+                { value: 100, symbol: 'C' },
+                { value: 90, symbol: 'XC' },
+                { value: 50, symbol: 'L' },
+                { value: 40, symbol: 'XL' },
+                { value: 10, symbol: 'X' },
+                { value: 9, symbol: 'IX' },
+                { value: 5, symbol: 'V' },
+                { value: 4, symbol: 'IV' },
+                { value: 1, symbol: 'I' }
+            ];
+
+            let result = '';
+            let remaining = num;
+
+            for (const numeral of romanNumerals) {
+                while (remaining >= numeral.value) {
+                    result += numeral.symbol;
+                    remaining -= numeral.value;
+                }
+            }
+
+            return result;
+        }
+
+        updateDisplay();
+    </script>
+</body>
+</html>
